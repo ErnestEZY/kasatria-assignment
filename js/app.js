@@ -6,14 +6,11 @@ import TWEEN from "@tweenjs/tween.js";
 import { CONFIG } from "./config.js";
 import { loadData } from "./data.js";
 import { tableLayout, sphereLayout, helixLayout, gridLayout } from "./layouts.js";
-import { initTokenClient, requestSheetsAccess, decodeIdToken, getAccessToken } from "./auth.js";
+import { initTokenClient, requestSheetsAccess } from "./auth.js";
 
 let camera, scene, renderer, controls;
 let objects = [];
 let targets = { table: [], sphere: [], helix: [], grid: [] };
-let hasRequestedToken = false;
-let isUserSignedIn = false;
-let cachedToken = null;
 
 init3D();
 animate();
@@ -21,82 +18,39 @@ wireLoginScreen();
 
 // ------------------------------------------------------------------
 // Login handling
+//
+// IMPORTANT: this uses a single popup, requested directly and
+// synchronously from the button's click handler to avoid popup blocking.
 // ------------------------------------------------------------------
 
-// Called by Google Identity Services after a successful sign-in
-// (referenced via data-callback in index.html, so must be on window).
-// This replaces the placeholder defined in index.html's <head>.
-window.handleCredentialResponse = function (response) {
-  const profile = decodeIdToken(response.credential);
-  console.log("Signed in as:", profile?.name, profile?.email);
-  isUserSignedIn = true;
-  
-  // Enter the app first!
-  enterApp();
-  
-  // If we have a cached token already, load data immediately!
-  if (cachedToken) {
-    console.log("Using cached token after sign-in");
-    loadAndBuild(cachedToken);
-  } else if (!CONFIG.USE_LOCAL_DATA_ONLY && !hasRequestedToken) {
-    // Otherwise, request Sheets access right away!
-    console.log("Requesting Sheets access immediately after sign-in");
-    requestSheetsAccess();
-  }
-};
-
-// If Google's callback fired before this module finished loading (the race
-// the placeholder guards against), process that response now.
-if (window.__pendingCredentialResponse) {
-  window.handleCredentialResponse(window.__pendingCredentialResponse);
-  window.__pendingCredentialResponse = null;
-}
-
 function wireLoginScreen() {
-  // Dev shortcut so you can build/test the 3D view before OAuth is fully wired up
-  document.getElementById("dev-skip-btn").addEventListener("click", enterApp);
-
-  const clientIdIsPlaceholder =
-    document.getElementById("g_id_onload")?.dataset.client_id?.startsWith("YOUR_CLIENT_ID");
+  const googleBtn = document.getElementById("google-signin-btn");
+  const clientIdIsPlaceholder = CONFIG.GOOGLE_CLIENT_ID.startsWith("YOUR_CLIENT_ID");
 
   if (clientIdIsPlaceholder) {
-    // Hide the real Google button so it can't be clicked with a fake Client ID
-    // (that's what causes the Google error page). Once you've filled in a
-    // real Client ID in both config.js and index.html, this no longer applies
-    // — the button shows regardless of USE_LOCAL_DATA_ONLY, so you can test
-    // the sign-in flow itself even while still using local CSV data.
-    document.getElementById("g_id_onload")?.remove();
-    document.querySelector(".g_id_signin")?.remove();
+    // Hide the real Google button so it can't be clicked with a fake Client ID.
+    googleBtn?.remove();
     return;
   }
 
-  // Prepares the token client so that once the user is signed in we can
-  // request an access token scoped for Sheets access.
-  function initializeTokenClient() {
-    if (typeof google !== "undefined" && google.accounts && google.accounts.oauth2) {
-      console.log("Initializing token client...");
-      initTokenClient((token) => {
-        console.log("Token received");
-        hasRequestedToken = true;
-        if (isUserSignedIn) {
-          console.log("User already signed in, loading data now");
-          loadAndBuild(token);
-        } else {
-          console.log("User not signed in yet, storing token for later");
-          cachedToken = token;
-        }
-      });
-    } else {
-      console.log("Google library not loaded yet, retrying...");
-      setTimeout(initializeTokenClient, 100);
+  window.addEventListener("load", () => {
+    if (typeof google === "undefined" || !google.accounts) {
+      console.error("Google Identity Services failed to load.");
+      return;
     }
-  }
+    initTokenClient((token) => {
+      // Runs after the popup closes — safe to do async work here,
+      // just not to open another popup.
+      enterApp(token);
+    });
 
-  // Start trying to initialize immediately, don't wait for window.load
-  initializeTokenClient();
+    googleBtn.addEventListener("click", () => {
+      requestSheetsAccess(); // opens the ONE popup, directly from this click
+    });
+  });
 }
 
-async function enterApp() {
+async function enterApp(accessToken) {
   document.getElementById("login-screen").style.display = "none";
   document.getElementById("app").style.display = "block";
 
@@ -109,20 +63,8 @@ async function enterApp() {
     controls.handleResize();
   }
 
-  if (!CONFIG.USE_LOCAL_DATA_ONLY) {
-    // Show loading indicator if we're waiting for data
-    if (!cachedToken && !hasRequestedToken) {
-      const indicator = document.getElementById("loading-indicator");
-      indicator.style.display = "block";
-      indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
-    }
-  } else {
-    // Dev flow: skip the Sheets round trip and just use the bundled CSV
-    await loadAndBuild(null);
-  }
+  await loadAndBuild(accessToken);
 }
-
-
 
 async function loadAndBuild(accessToken) {
   const indicator = document.getElementById("loading-indicator");

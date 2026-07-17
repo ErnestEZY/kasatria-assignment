@@ -16,12 +16,6 @@ export const CONFIG = {
   // Scope needed to read Sheets data
   SHEETS_SCOPE: "https://www.googleapis.com/auth/spreadsheets.readonly",
 
-  // Set to true to always use the local CSV instead of calling the Sheets API
-  // (handy while YOUR_CLIENT_ID / YOUR_SHEET_ID are still placeholders)
-  USE_LOCAL_DATA_ONLY: false,
-
-  LOCAL_CSV_PATH: "data/Data_Template.csv",
-
   // Net worth color tier thresholds (per assignment spec)
   NET_WORTH_TIERS: {
     LOW_MAX: 100000,   // < 100K -> red

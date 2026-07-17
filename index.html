@@ -6,17 +6,7 @@
 <title>Kasatria 3D Data Table</title>
 <link rel="stylesheet" href="css/style.css" />
 
-<!-- Defined here (before Google's script) so the GSI library never finds
-     'callback is not a function' — even if its async script executes before
-     our own ES module (app.js) has loaded. app.js replaces this with the
-     real handler, and picks up any response that arrived in the meantime. -->
-<script>
-  window.handleCredentialResponse = function (response) {
-    window.__pendingCredentialResponse = response;
-  };
-</script>
-
-<!-- Google Identity Services (Sign-In + OAuth token client) -->
+<!-- Google Identity Services (used here only for the OAuth token client) -->
 <script src="https://accounts.google.com/gsi/client" async defer></script>
 
 <!-- Import map: lets the browser resolve bare module specifiers below -->
@@ -36,23 +26,18 @@
   <div id="login-screen">
     <div class="login-card">
       <h1>Kasatria Data Explorer</h1>
-      <p>Sign in with Google to access your dataset (you'll be asked to grant permission once)</p>
+      <p>Sign in with Google to load the dataset</p>
 
-      <div id="g_id_onload"
-           data-client_id="268210721095-f80t5cmmj41q1uu0nfejbp7qck4lmer4.apps.googleusercontent.com"
-           data-callback="handleCredentialResponse"
-           data-scope="https://www.googleapis.com/auth/spreadsheets.readonly"
-           data-auto_prompt="false">
-      </div>
-      <div class="g_id_signin"
-           data-type="standard"
-           data-theme="filled_black"
-           data-size="large"
-           data-shape="pill">
-      </div>
+      <button id="google-signin-btn" class="google-btn">
+        <svg width="18" height="18" viewBox="0 0 18 18" xmlns="http://www.w3.org/2000/svg">
+          <path fill="#4285F4" d="M17.64 9.2c0-.64-.06-1.25-.16-1.84H9v3.49h4.84c-.21 1.13-.85 2.09-1.8 2.73v2.27h2.92c1.71-1.57 2.68-3.88 2.68-6.65z"/>
+          <path fill="#34A853" d="M9 18c2.43 0 4.47-.8 5.96-2.18l-2.92-2.27c-.81.54-1.84.86-3.04.86-2.34 0-4.32-1.58-5.03-3.71H.96v2.33C2.44 15.98 5.48 18 9 18z"/>
+          <path fill="#FBBC05" d="M3.97 10.7c-.18-.54-.28-1.11-.28-1.7s.1-1.16.28-1.7V4.97H.96C.35 6.19 0 7.55 0 9s.35 2.81.96 4.03l3.01-2.33z"/>
+          <path fill="#EA4335" d="M9 3.58c1.32 0 2.51.45 3.44 1.35l2.59-2.59C13.46.89 11.43 0 9 0 5.48 0 2.44 2.02.96 4.97l3.01 2.33C4.68 5.16 6.66 3.58 9 3.58z"/>
+        </svg>
+        <span>Sign in with Google</span>
+      </button>
 
-      <!-- Dev-only shortcut: skip login and use local CSV while building -->
-      <button id="dev-skip-btn" class="dev-skip">Skip login (use local test data)</button>
     </div>
   </div>
 

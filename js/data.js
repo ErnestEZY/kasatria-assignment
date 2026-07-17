@@ -1,39 +1,5 @@
 import { CONFIG } from "./config.js";
 
-/**
- * Minimal CSV parser that handles quoted fields containing commas,
- * e.g. "$251,260.80" — enough for this dataset without pulling in a library.
- */
-function parseCSV(text) {
-  const rows = [];
-  let row = [];
-  let field = "";
-  let inQuotes = false;
-
-  for (let i = 0; i < text.length; i++) {
-    const char = text[i];
-    const next = text[i + 1];
-
-    if (inQuotes) {
-      if (char === '"' && next === '"') { field += '"'; i++; }
-      else if (char === '"') { inQuotes = false; }
-      else { field += char; }
-    } else {
-      if (char === '"') inQuotes = true;
-      else if (char === ",") { row.push(field); field = ""; }
-      else if (char === "\n" || char === "\r") {
-        if (field !== "" || row.length) { row.push(field); rows.push(row); }
-        field = ""; row = [];
-        if (char === "\r" && next === "\n") i++;
-      } else {
-        field += char;
-      }
-    }
-  }
-  if (field !== "" || row.length) { row.push(field); rows.push(row); }
-  return rows.filter(r => r.length && r.some(c => c.trim() !== ""));
-}
-
 function toRecord([name, photo, age, country, interest, netWorthRaw]) {
   const netWorth = parseFloat(String(netWorthRaw).replace(/[$,]/g, "")) || 0;
   return {
@@ -44,15 +10,6 @@ function toRecord([name, photo, age, country, interest, netWorthRaw]) {
     interest: (interest || "").trim(),
     netWorth,
   };
-}
-
-/** Load and parse the bundled local CSV (used for dev/testing without OAuth). */
-export async function loadLocalData() {
-  const res = await fetch(CONFIG.LOCAL_CSV_PATH);
-  const text = await res.text();
-  const rows = parseCSV(text);
-  rows.shift(); // drop header row
-  return rows.map(toRecord);
 }
 
 /**
@@ -82,10 +39,7 @@ export async function loadSheetData(accessToken) {
   return rows.map(toRecord);
 }
 
-/** Single entry point: picks local CSV or live Sheets data based on config/token. */
+/** Single entry point: load live Sheets data. */
 export async function loadData(accessToken) {
-  if (CONFIG.USE_LOCAL_DATA_ONLY || !accessToken) {
-    return loadLocalData();
-  }
   return loadSheetData(accessToken);
 }
