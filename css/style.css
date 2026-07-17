@@ -127,6 +127,8 @@ html, body {
      of rotating the camera. */
   pointer-events: none;
   user-select: none;
+  -webkit-user-select: none; /* Safari */
+  -moz-user-select: none; /* Firefox (optional, but good practice) */
 }
 
 .element .photo {
@@ -137,7 +139,8 @@ html, body {
   border: 2px solid rgba(255,255,255,0.6);
   background: #333;
   margin-bottom: 6px;
-  -webkit-user-drag: none;
+  -webkit-user-drag: none; /* Safari */
+  user-drag: none; /* Standard (if needed) */
   pointer-events: none;
 }
 
