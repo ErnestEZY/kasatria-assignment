@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Kasatria 3D Data Table</title>
+<link rel="stylesheet" href="css/style.css" />
+
+<!-- Defined here (before Google's script) so the GSI library never finds
+     'callback is not a function' — even if its async script executes before
+     our own ES module (app.js) has loaded. app.js replaces this with the
+     real handler, and picks up any response that arrived in the meantime. -->
+<script>
+  window.handleCredentialResponse = function (response) {
+    window.__pendingCredentialResponse = response;
+  };
+</script>
+
+<!-- Google Identity Services (Sign-In + OAuth token client) -->
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+
+<!-- Import map: lets the browser resolve bare module specifiers below -->
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "@tweenjs/tween.js": "https://cdn.jsdelivr.net/npm/@tweenjs/tween.js@23.1.1/dist/tween.esm.js"
+  }
+}
+</script>
+</head>
+<body>
+
+  <!-- ===================== LOGIN SCREEN ===================== -->
+  <div id="login-screen">
+    <div class="login-card">
+      <h1>Kasatria Data Explorer</h1>
+      <p>Sign in with Google to load the dataset</p>
+
+      <div id="g_id_onload"
+           data-client_id="268210721095-f80t5cmmj41q1uu0nfejbp7qck4lmer4.apps.googleusercontent.com"
+           data-callback="handleCredentialResponse"
+           data-auto_prompt="false">
+      </div>
+      <div class="g_id_signin"
+           data-type="standard"
+           data-theme="filled_black"
+           data-size="large"
+           data-shape="pill">
+      </div>
+
+      <!-- Dev-only shortcut: skip login and use local CSV while building -->
+      <button id="dev-skip-btn" class="dev-skip">Skip login (use local test data)</button>
+    </div>
+  </div>
+
+  <!-- ===================== MAIN APP ===================== -->
+  <div id="app" style="display:none;">
+    <div id="container"></div>
+
+    <div id="menu">
+      <button id="table">TABLE</button>
+      <button id="sphere">SPHERE</button>
+      <button id="helix">HELIX</button>
+      <button id="grid">GRID</button>
+    </div>
+
+    <div id="legend">
+      <span class="legend-label">LOW</span>
+      <div class="legend-bar"></div>
+      <span class="legend-label">HIGH</span>
+      <span class="legend-caption">Net Worth</span>
+    </div>
+
+    <div id="loading-indicator" style="display:none;">Loading data…</div>
+  </div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
