@@ -6,11 +6,12 @@ import TWEEN from "@tweenjs/tween.js";
 import { CONFIG } from "./config.js";
 import { loadData } from "./data.js";
 import { tableLayout, sphereLayout, helixLayout, gridLayout } from "./layouts.js";
-import { initTokenClient, requestSheetsAccess, decodeIdToken } from "./auth.js";
+import { initTokenClient, requestSheetsAccess, decodeIdToken, getAccessToken } from "./auth.js";
 
 let camera, scene, renderer, controls;
 let objects = [];
 let targets = { table: [], sphere: [], helix: [], grid: [] };
+let hasRequestedToken = false;
 
 init3D();
 animate();
@@ -61,7 +62,11 @@ function wireLoginScreen() {
       console.log("Initializing token client...");
       initTokenClient((token) => {
         console.log("Token received, loading data...");
-        loadAndBuild(token);
+        hasRequestedToken = true;
+        // If we're already in the app, load the data; otherwise, wait for sign-in
+        if (document.getElementById("app").style.display !== "none") {
+          loadAndBuild(token);
+        }
       });
     } else {
       console.log("Google library not loaded yet, retrying...");
@@ -87,21 +92,39 @@ async function enterApp() {
   }
 
   if (!CONFIG.USE_LOCAL_DATA_ONLY) {
-    // Real flow: request an access token, then fetch the Sheet once we have it
-    const indicator = document.getElementById("loading-indicator");
-    indicator.style.display = "block";
-    indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
-    
-    try {
-      requestSheetsAccess();
-    } catch (err) {
-      console.error("Error requesting Sheets access:", err);
-      indicator.textContent = "Failed to get access, using local data...";
-      setTimeout(() => loadAndBuild(null), 1000);
+    // Real flow: check if we already have a token (cached)
+    if (hasRequestedToken) {
+      console.log("Already have token, loading data immediately");
+      // Wait a tiny bit to make sure the token is set
+      setTimeout(() => {
+        const token = getAccessToken();
+        if (token) {
+          loadAndBuild(token);
+        } else {
+          // Fallback to requesting if token isn't available for some reason
+          requestSheetsAccessWithIndicator();
+        }
+      }, 100);
+    } else {
+      requestSheetsAccessWithIndicator();
     }
   } else {
     // Dev flow: skip the Sheets round trip and just use the bundled CSV
     await loadAndBuild(null);
+  }
+}
+
+function requestSheetsAccessWithIndicator() {
+  const indicator = document.getElementById("loading-indicator");
+  indicator.style.display = "block";
+  indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
+  
+  try {
+    requestSheetsAccess();
+  } catch (err) {
+    console.error("Error requesting Sheets access:", err);
+    indicator.textContent = "Failed to get access, using local data...";
+    setTimeout(() => loadAndBuild(null), 1000);
   }
 }
 
