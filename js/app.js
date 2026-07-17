@@ -57,7 +57,7 @@ function wireLoginScreen() {
   // Prepares the token client so that once the user is signed in we can
   // request an access token scoped for Sheets access.
   function initializeTokenClient() {
-    if (typeof google !== "undefined" && google.accounts) {
+    if (typeof google !== "undefined" && google.accounts && google.accounts.oauth2) {
       console.log("Initializing token client...");
       initTokenClient((token) => {
         console.log("Token received, loading data...");
@@ -69,12 +69,8 @@ function wireLoginScreen() {
     }
   }
 
-  // Check if window is already loaded
-  if (document.readyState === "complete") {
-    initializeTokenClient();
-  } else {
-    window.addEventListener("load", initializeTokenClient);
-  }
+  // Start trying to initialize immediately, don't wait for window.load
+  initializeTokenClient();
 }
 
 async function enterApp() {
@@ -92,16 +88,20 @@ async function enterApp() {
 
   if (!CONFIG.USE_LOCAL_DATA_ONLY) {
     // Real flow: request an access token, then fetch the Sheet once we have it
-    // Add a small timeout to ensure DOM is ready before requesting token
-    setTimeout(() => {
-      try {
-        requestSheetsAccess();
-      } catch (err) {
-        console.error("Error requesting Sheets access:", err);
-        // Fallback to local data if Sheets access fails
-        loadAndBuild(null);
-      }
-    }, 100);
+    // Show a message to the user
+    const indicator = document.getElementById("loading-indicator");
+    indicator.style.display = "block";
+    indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
+    
+    // Request token immediately, no timeout
+    try {
+      requestSheetsAccess();
+    } catch (err) {
+      console.error("Error requesting Sheets access:", err);
+      indicator.textContent = "Failed to get access, using local data...";
+      // Fallback to local data if Sheets access fails
+      setTimeout(() => loadAndBuild(null), 1000);
+    }
   } else {
     // Dev flow: skip the Sheets round trip and just use the bundled CSV
     await loadAndBuild(null);
