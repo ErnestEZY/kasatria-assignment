@@ -27,7 +27,15 @@ wireLoginScreen();
 window.handleCredentialResponse = function (response) {
   const profile = decodeIdToken(response.credential);
   console.log("Signed in as:", profile?.name, profile?.email);
+  
+  // Enter the app first, then immediately request Sheets access
   enterApp();
+  
+  // If we're not using local data, request Sheets access right away!
+  if (!CONFIG.USE_LOCAL_DATA_ONLY && !hasRequestedToken) {
+    console.log("Requesting Sheets access immediately after sign-in");
+    requestSheetsAccess();
+  }
 };
 
 // If Google's callback fired before this module finished loading (the race
@@ -93,6 +101,7 @@ async function enterApp() {
 
   if (!CONFIG.USE_LOCAL_DATA_ONLY) {
     // Real flow: check if we already have a token (cached)
+    const indicator = document.getElementById("loading-indicator");
     if (hasRequestedToken) {
       console.log("Already have token, loading data immediately");
       // Wait a tiny bit to make sure the token is set
@@ -102,11 +111,15 @@ async function enterApp() {
           loadAndBuild(token);
         } else {
           // Fallback to requesting if token isn't available for some reason
-          requestSheetsAccessWithIndicator();
+          indicator.style.display = "block";
+          indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
+          requestSheetsAccess();
         }
       }, 100);
     } else {
-      requestSheetsAccessWithIndicator();
+      // Show loading indicator while we wait for the token request to complete
+      indicator.style.display = "block";
+      indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
     }
   } else {
     // Dev flow: skip the Sheets round trip and just use the bundled CSV
@@ -114,19 +127,7 @@ async function enterApp() {
   }
 }
 
-function requestSheetsAccessWithIndicator() {
-  const indicator = document.getElementById("loading-indicator");
-  indicator.style.display = "block";
-  indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
-  
-  try {
-    requestSheetsAccess();
-  } catch (err) {
-    console.error("Error requesting Sheets access:", err);
-    indicator.textContent = "Failed to get access, using local data...";
-    setTimeout(() => loadAndBuild(null), 1000);
-  }
-}
+
 
 async function loadAndBuild(accessToken) {
   const indicator = document.getElementById("loading-indicator");
