@@ -8,7 +8,7 @@ export const CONFIG = {
   GOOGLE_CLIENT_ID: "268210721095-f80t5cmmj41q1uu0nfejbp7qck4lmer4.apps.googleusercontent.com",
 
   // The long ID in your Sheet's URL: docs.google.com/spreadsheets/d/<THIS>/edit
-  SHEET_ID: "YOUR_SHEET_ID",
+  SHEET_ID: "1v9opDmumL2THSBLBZ7dVLiJ2DTXoX3OODEZCmqwFxlA",
 
   // Adjust to match however many rows your sheet has (header row excluded)
   SHEET_RANGE: "Sheet1!A2:F201",
@@ -18,7 +18,7 @@ export const CONFIG = {
 
   // Set to true to always use the local CSV instead of calling the Sheets API
   // (handy while YOUR_CLIENT_ID / YOUR_SHEET_ID are still placeholders)
-  USE_LOCAL_DATA_ONLY: true,
+  USE_LOCAL_DATA_ONLY: false,
 
   LOCAL_CSV_PATH: "data/Data_Template.csv",
 
