@@ -12,6 +12,8 @@ let camera, scene, renderer, controls;
 let objects = [];
 let targets = { table: [], sphere: [], helix: [], grid: [] };
 let hasRequestedToken = false;
+let isUserSignedIn = false;
+let cachedToken = null;
 
 init3D();
 animate();
@@ -27,12 +29,17 @@ wireLoginScreen();
 window.handleCredentialResponse = function (response) {
   const profile = decodeIdToken(response.credential);
   console.log("Signed in as:", profile?.name, profile?.email);
+  isUserSignedIn = true;
   
-  // Enter the app first, then immediately request Sheets access
+  // Enter the app first!
   enterApp();
   
-  // If we're not using local data, request Sheets access right away!
-  if (!CONFIG.USE_LOCAL_DATA_ONLY && !hasRequestedToken) {
+  // If we have a cached token already, load data immediately!
+  if (cachedToken) {
+    console.log("Using cached token after sign-in");
+    loadAndBuild(cachedToken);
+  } else if (!CONFIG.USE_LOCAL_DATA_ONLY && !hasRequestedToken) {
+    // Otherwise, request Sheets access right away!
     console.log("Requesting Sheets access immediately after sign-in");
     requestSheetsAccess();
   }
@@ -69,11 +76,14 @@ function wireLoginScreen() {
     if (typeof google !== "undefined" && google.accounts && google.accounts.oauth2) {
       console.log("Initializing token client...");
       initTokenClient((token) => {
-        console.log("Token received, loading data...");
+        console.log("Token received");
         hasRequestedToken = true;
-        // If we're already in the app, load the data; otherwise, wait for sign-in
-        if (document.getElementById("app").style.display !== "none") {
+        if (isUserSignedIn) {
+          console.log("User already signed in, loading data now");
           loadAndBuild(token);
+        } else {
+          console.log("User not signed in yet, storing token for later");
+          cachedToken = token;
         }
       });
     } else {
@@ -100,24 +110,9 @@ async function enterApp() {
   }
 
   if (!CONFIG.USE_LOCAL_DATA_ONLY) {
-    // Real flow: check if we already have a token (cached)
-    const indicator = document.getElementById("loading-indicator");
-    if (hasRequestedToken) {
-      console.log("Already have token, loading data immediately");
-      // Wait a tiny bit to make sure the token is set
-      setTimeout(() => {
-        const token = getAccessToken();
-        if (token) {
-          loadAndBuild(token);
-        } else {
-          // Fallback to requesting if token isn't available for some reason
-          indicator.style.display = "block";
-          indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
-          requestSheetsAccess();
-        }
-      }, 100);
-    } else {
-      // Show loading indicator while we wait for the token request to complete
+    // Show loading indicator if we're waiting for data
+    if (!cachedToken && !hasRequestedToken) {
+      const indicator = document.getElementById("loading-indicator");
       indicator.style.display = "block";
       indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
     }
