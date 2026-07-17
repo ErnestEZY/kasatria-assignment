@@ -88,19 +88,31 @@ async function enterApp() {
 
   if (!CONFIG.USE_LOCAL_DATA_ONLY) {
     // Real flow: request an access token, then fetch the Sheet once we have it
-    // Show a message to the user
+    // Show a message to the user and the manual button
     const indicator = document.getElementById("loading-indicator");
+    const authBtn = document.getElementById("authorize-sheets");
     indicator.style.display = "block";
-    indicator.textContent = "Requesting Google Sheets access... (please allow popups!)";
+    indicator.textContent = "Click the button below to authorize Google Sheets access!";
+    authBtn.style.display = "block";
     
-    // Request token immediately, no timeout
+    // Wire up the manual auth button
+    authBtn.onclick = () => {
+      try {
+        requestSheetsAccess();
+      } catch (err) {
+        console.error("Error requesting Sheets access:", err);
+        indicator.textContent = "Failed to get access, using local data...";
+        authBtn.style.display = "none";
+        // Fallback to local data if Sheets access fails
+        setTimeout(() => loadAndBuild(null), 1000);
+      }
+    };
+    
+    // Also try to auto-request first, in case popups are allowed
     try {
       requestSheetsAccess();
     } catch (err) {
-      console.error("Error requesting Sheets access:", err);
-      indicator.textContent = "Failed to get access, using local data...";
-      // Fallback to local data if Sheets access fails
-      setTimeout(() => loadAndBuild(null), 1000);
+      console.log("Auto-request failed, waiting for user to click button:", err);
     }
   } else {
     // Dev flow: skip the Sheets round trip and just use the bundled CSV
@@ -110,7 +122,9 @@ async function enterApp() {
 
 async function loadAndBuild(accessToken) {
   const indicator = document.getElementById("loading-indicator");
+  const authBtn = document.getElementById("authorize-sheets");
   indicator.style.display = "block";
+  authBtn.style.display = "none"; // Hide the auth button once we're loading
   try {
     const records = await loadData(accessToken);
     buildElements(records);
