@@ -140,7 +140,6 @@ html, body {
   border: 2px solid rgba(255,255,255,0.6);
   background: #333;
   margin-bottom: 6px;
-  -webkit-user-drag: none; /* Safari */
   pointer-events: none;
 }
 
