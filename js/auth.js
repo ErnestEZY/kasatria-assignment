@@ -9,9 +9,9 @@ const TOKEN_EXPIRY_KEY = "kasatria_sheets_token_expiry";
 export function initTokenClient(onToken) {
   console.log("initTokenClient called");
   
-  // Check if we have a cached token that's not expired
-  const cachedToken = localStorage.getItem(TOKEN_KEY);
-  const cachedExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  // Check if we have a cached token that's not expired (using sessionStorage now!)
+  const cachedToken = sessionStorage.getItem(TOKEN_KEY);
+  const cachedExpiry = sessionStorage.getItem(TOKEN_EXPIRY_KEY);
   if (cachedToken && cachedExpiry && Date.now() < parseInt(cachedExpiry)) {
     console.log("Using cached access token");
     accessToken = cachedToken;
@@ -25,10 +25,10 @@ export function initTokenClient(onToken) {
     callback: (tokenResponse) => {
       console.log("Token response received:", tokenResponse);
       accessToken = tokenResponse.access_token;
-      // Cache the token and set expiry (expires_in is in seconds)
+      // Cache the token and set expiry (expires_in is in seconds) in sessionStorage!
       const expiresAt = Date.now() + (tokenResponse.expires_in * 1000);
-      localStorage.setItem(TOKEN_KEY, accessToken);
-      localStorage.setItem(TOKEN_EXPIRY_KEY, expiresAt.toString());
+      sessionStorage.setItem(TOKEN_KEY, accessToken);
+      sessionStorage.setItem(TOKEN_EXPIRY_KEY, expiresAt.toString());
       onToken(accessToken);
     },
     error_callback: (error) => {
@@ -42,8 +42,8 @@ export function requestSheetsAccess() {
   console.log("requestSheetsAccess called, tokenClient:", !!tokenClient);
   
   // Check again for cached token before requesting
-  const cachedToken = localStorage.getItem(TOKEN_KEY);
-  const cachedExpiry = localStorage.getItem(TOKEN_EXPIRY_KEY);
+  const cachedToken = sessionStorage.getItem(TOKEN_KEY);
+  const cachedExpiry = sessionStorage.getItem(TOKEN_EXPIRY_KEY);
   if (cachedToken && cachedExpiry && Date.now() < parseInt(cachedExpiry)) {
     console.log("Using cached access token instead of requesting new one");
     return; // Token is already valid, no need to request
