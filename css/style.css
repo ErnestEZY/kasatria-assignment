@@ -38,6 +38,37 @@ html, body {
   font-size: 14px;
 }
 
+.google-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  background: #fff;
+  color: #1f1f1f;
+  border: 1px solid #dadce0;
+  border-radius: 4px;
+  padding: 10px 24px;
+  font-family: 'Google Sans', 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.25px;
+  cursor: pointer;
+  transition: box-shadow 0.2s, background 0.2s;
+}
+
+.google-btn:hover {
+  box-shadow: 0 1px 3px 1px rgba(66,64,67,.15), 0 1px 2px 0 rgba(66,64,67,.3);
+  background: #f8f9fa;
+}
+
+.google-btn:active {
+  background: #e8e8e8;
+}
+
+.google-btn svg {
+  flex-shrink: 0;
+}
+
 .g_id_signin {
   display: flex;
   justify-content: center;
