@@ -93,6 +93,7 @@ html, body {
   position: relative;
   width: 100vw;
   height: 100vh;
+  display: none;
 }
 
 #container {
@@ -126,9 +127,9 @@ html, body {
      gets hijacked by the browser's native drag/selection behavior instead
      of rotating the camera. */
   pointer-events: none;
-  user-select: none;
   -webkit-user-select: none; /* Safari */
-  -moz-user-select: none; /* Firefox (optional, but good practice) */
+  -moz-user-select: none; /* Firefox */
+  user-select: none; /* Standard */
 }
 
 .element .photo {
@@ -140,7 +141,6 @@ html, body {
   background: #333;
   margin-bottom: 6px;
   -webkit-user-drag: none; /* Safari */
-  user-drag: none; /* Standard (if needed) */
   pointer-events: none;
 }
 
@@ -237,4 +237,5 @@ html, body {
   z-index: 20;
   color: #888;
   font-size: 14px;
+  display: none;
 }
