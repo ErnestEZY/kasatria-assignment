@@ -36,11 +36,12 @@
   <div id="login-screen">
     <div class="login-card">
       <h1>Kasatria Data Explorer</h1>
-      <p>Sign in with Google to load the dataset</p>
+      <p>Sign in with Google to access your dataset (you'll be asked to grant permission once)</p>
 
       <div id="g_id_onload"
            data-client_id="268210721095-f80t5cmmj41q1uu0nfejbp7qck4lmer4.apps.googleusercontent.com"
            data-callback="handleCredentialResponse"
+           data-scope="https://www.googleapis.com/auth/spreadsheets.readonly"
            data-auto_prompt="false">
       </div>
       <div class="g_id_signin"
