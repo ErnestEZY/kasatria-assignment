@@ -11,7 +11,7 @@ export const CONFIG = {
   SHEET_ID: "1v9opDmumL2THSBLBZ7dVLiJ2DTXoX3OODEZCmqwFxlA",
 
   // Adjust to match however many rows your sheet has (header row excluded)
-  SHEET_RANGE: "Sheet1!A2:F201",
+  SHEET_RANGE: "Data_Template!A2:F201",
 
   // Scope needed to read Sheets data
   SHEETS_SCOPE: "https://www.googleapis.com/auth/spreadsheets.readonly",
